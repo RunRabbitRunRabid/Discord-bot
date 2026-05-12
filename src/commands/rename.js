@@ -19,6 +19,7 @@ module.exports = {
       opt.setName('character')
         .setDescription('Current character name')
         .setRequired(true)
+        .setAutocomplete(true)
     )
     .addStringOption(opt =>
       opt.setName('new_name')

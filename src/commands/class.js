@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { getCharacter, updateCharacter, isOnCooldown, setCooldown } = require('../database');
-const { getClassOfDay, getWeekdayName, isProficientInClass } = require('../utils/time');
+const { getClassOfDay, getWeekdayName } = require('../utils/time');
 const { rollXp } = require('../utils/xp');
 
 const PINK = 0xFFB7C5;
@@ -21,12 +21,23 @@ module.exports = {
       opt.setName('character')
         .setDescription('Your character\'s name')
         .setRequired(true)
+        .setAutocomplete(true)
+    )
+    .addStringOption(opt =>
+      opt.setName('proficiency')
+        .setDescription('Which proficiency slot to train today')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Proficiency 1', value: 'proficiency1' },
+          { name: 'Proficiency 2', value: 'proficiency2' },
+        )
     ),
 
   async execute(interaction) {
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
     const charName = interaction.options.getString('character').trim();
+    const proficiencySlot = interaction.options.getString('proficiency');
 
     let char;
     try {
@@ -71,14 +82,16 @@ module.exports = {
     try {
       const todayClass = getClassOfDay();
       const weekday = getWeekdayName();
-      const proficient = isProficientInClass(char, todayClass);
+      const selectedClass = proficiencySlot === 'proficiency1' ? char.class1 : char.class2;
+      const slotLabel = proficiencySlot === 'proficiency1' ? 'Proficiency 1' : 'Proficiency 2';
+      const proficient = selectedClass === todayClass;
 
       let xpGained = rollXp();
       let bonusLine = '';
 
       if (proficient) {
         xpGained += 5;
-        bonusLine = `\n> 🌸 **Proficiency Bonus +5 XP** — ${todayClass} is one of ${char.name}'s specialties!`;
+        bonusLine = `\n> 🌸 **Proficiency Bonus +5 XP** — ${todayClass} matches ${char.name}'s ${slotLabel} (${selectedClass})!`;
       }
 
       const newXp = char.xp + xpGained;
@@ -95,6 +108,7 @@ module.exports = {
           { name: 'XP Earned', value: `+${xpGained}`, inline: true },
           { name: 'Total XP', value: `${newXp}`, inline: true },
           { name: 'Today\'s Class', value: todayClass, inline: true },
+          { name: slotLabel, value: selectedClass, inline: true },
         )
         .setFooter({ text: 'Hero Academy · Cooldown resets at midnight Ohio time' })
         .setTimestamp();
