@@ -15,10 +15,10 @@ module.exports = {
       await updateAllLeaderboards(client).catch(console.error);
     }, { timezone: 'America/New_York' });
 
-    // Also update leaderboards every 10 minutes to keep them fresh
-    cron.schedule('*/10 * * * *', async () => {
+    // Update leaderboards every 60 seconds for live time and immediate character changes
+    setInterval(async () => {
       await updateAllLeaderboards(client).catch(() => {});
-    });
+    }, 60000);
 
     // Initial leaderboard update on startup
     await updateAllLeaderboards(client).catch(console.error);
