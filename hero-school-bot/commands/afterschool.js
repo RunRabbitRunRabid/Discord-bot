@@ -11,12 +11,28 @@ function randomMoney(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
 
+const CLUB_FLAVOR = [
+  'spent the afternoon with their club — laughing, bonding, and growing stronger together.',
+  "attended the club meeting and wouldn't have missed it for the world. Great vibes all around.",
+  'helped organize today\'s club event. The team spirit was absolutely contagious!',
+  'had a productive club afternoon full of snacks, strategy, and good company.',
+  'made some new friends at club today. Social skills: leveling up. 🌸',
+];
+
+const WORK_FLAVOR = [
+  'clocked out after a solid shift. Another day, another paycheck.',
+  'finished their shift and pocketed some well-earned cash. Hard work pays off.',
+  'handled every task without complaint. The manager definitely noticed.',
+  'powered through a busy shift. The wallet is looking a lot healthier now.',
+  'picked up an extra task at work today. The extra effort shows on the balance sheet.',
+];
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('afterschool')
     .setDescription('Do your after-school activity and earn XP and money')
     .addStringOption(opt =>
-      opt.setName('character').setDescription('Your character\'s name').setRequired(true)
+      opt.setName('character').setDescription("Your character's name").setRequired(true)
     ),
 
   async execute(interaction) {
@@ -41,7 +57,7 @@ module.exports = {
     ).get(guildId, character.id, 'afterschool', todayKey);
 
     if (used) {
-      return interaction.reply({ content: `🌸 **${charName}** has already done their after-school activity today!` });
+      return interaction.reply({ content: 'Hey now! You already did that today. You can try again tomorrow 🌸' });
     }
 
     const isWork = character.afterschool === 'work';
@@ -53,11 +69,14 @@ module.exports = {
       'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
     ).run(guildId, character.id, 'afterschool', todayKey);
 
+    const flavorPool = isWork ? WORK_FLAVOR : CLUB_FLAVOR;
+    const flavorText = `**${charName}** ${flavorPool[Math.floor(Math.random() * flavorPool.length)]}`;
     const activityLabel = isWork ? '🌸 Work' : '🌸 Club';
+
     const embed = new EmbedBuilder()
       .setTitle(`After-School — ${activityLabel}`)
       .setColor(0xff9ec8)
-      .setDescription(`**${charName}** completed their after-school ${character.afterschool}!`)
+      .setDescription(flavorText)
       .addFields(
         { name: 'XP Earned', value: `+${earnedXP}`, inline: true },
         { name: 'Money Earned', value: `+$${earnedMoney.toFixed(2)}`, inline: true },

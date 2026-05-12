@@ -37,7 +37,7 @@ module.exports = {
     ).get(guildId, character.id, 'study', todayKey);
 
     if (used) {
-      return interaction.reply({ content: `🌸 **${charName}** has already studied today. Rest up and try again tomorrow!` });
+      return interaction.reply({ content: `Hey now! You already did that today. You can try again tomorrow 🌸` });
     }
 
     const earned = randomXP();

@@ -38,7 +38,7 @@ module.exports = {
     ).get(guildId, character.id, 'class', todayKey);
 
     if (used) {
-      return interaction.reply({ content: `🌸 **${charName}** has already attended class today. Come back tomorrow!` });
+      return interaction.reply({ content: `Hey now! You already did that today. You can try again tomorrow 🌸` });
     }
 
     const todayClass = getTodayClass();

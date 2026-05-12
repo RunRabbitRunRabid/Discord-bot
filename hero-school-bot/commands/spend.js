@@ -29,9 +29,7 @@ module.exports = {
       return interaction.reply({ content: `🌸 **${charName}** doesn't belong to you.` });
     }
     if (character.money < amount) {
-      return interaction.reply({
-        content: `🌸 **${charName}** only has **$${Number(character.money).toFixed(2)}** and cannot afford $${amount.toFixed(2)}.`,
-      });
+      return interaction.reply({ content: 'Not enough funds.' });
     }
 
     db.prepare('UPDATE characters SET money = money - ? WHERE id = ?').run(amount, character.id);
