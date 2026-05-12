@@ -37,7 +37,7 @@ module.exports = {
     ).get(guildId, character.id, 'train', todayKey);
 
     if (used) {
-      return interaction.reply({ content: `🌸 **${charName}** has already trained today. Rest and recover!` });
+      return interaction.reply({ content: `Hey now! You already did that today. You can try again tomorrow 🌸` });
     }
 
     const earned = randomXP();
