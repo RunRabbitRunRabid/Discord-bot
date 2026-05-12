@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord
 const fs = require('fs');
 const path = require('path');
 const { startScheduler } = require('./scheduler');
+const { getUserCharacters } = require('./database');
 
 const PINK = 0xFFB7C5;
 
@@ -36,6 +37,25 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    const focused = interaction.options.getFocused(true);
+    if (focused.name === 'character') {
+      try {
+        const characters = getUserCharacters(interaction.guildId, interaction.user.id);
+        const query = focused.value.toLowerCase();
+        const choices = characters
+          .filter(c => c.name.toLowerCase().includes(query))
+          .slice(0, 25)
+          .map(c => ({ name: c.name, value: c.name }));
+        await interaction.respond(choices);
+      } catch (err) {
+        console.error('[Autocomplete] character lookup failed:', err);
+        await interaction.respond([]).catch(() => {});
+      }
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   if (!interaction.guildId) {

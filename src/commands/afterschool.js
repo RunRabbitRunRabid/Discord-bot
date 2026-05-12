@@ -20,6 +20,7 @@ module.exports = {
       opt.setName('character')
         .setDescription('Your character\'s name')
         .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   async execute(interaction) {

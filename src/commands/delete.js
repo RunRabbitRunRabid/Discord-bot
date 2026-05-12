@@ -19,6 +19,7 @@ module.exports = {
       opt.setName('character')
         .setDescription('Character name to delete')
         .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   async execute(interaction) {
