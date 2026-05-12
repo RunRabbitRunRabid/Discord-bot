@@ -1,0 +1,20 @@
+{
+  "name": "hero-school-bot",
+  "version": "1.0.0",
+  "description": "Discord bot for Hero School roleplay server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "deploy": "node deploy-commands.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "better-sqlite3": "^9.4.3",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3",
+    "luxon": "^3.4.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
