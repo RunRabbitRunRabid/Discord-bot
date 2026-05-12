@@ -3,6 +3,7 @@ const { Client, GatewayIntentBits, Collection, EmbedBuilder } = require('discord
 const fs = require('fs');
 const path = require('path');
 const { startScheduler } = require('./scheduler');
+const { getUserCharacters } = require('./database');
 
 const PINK = 0xFFB7C5;
 
@@ -36,6 +37,28 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    const { commandName, guildId } = interaction;
+    const userId = interaction.user.id;
+    const focused = interaction.options.getFocused(true);
+
+    if (focused.name === 'character') {
+      try {
+        const characters = getUserCharacters(guildId, userId);
+        const input = focused.value.toLowerCase();
+        const choices = characters
+          .filter(c => c.name.toLowerCase().includes(input))
+          .slice(0, 25)
+          .map(c => ({ name: c.name, value: c.name }));
+        await interaction.respond(choices);
+      } catch (err) {
+        console.error(`[Autocomplete] Error handling autocomplete for /${commandName}:`, err);
+        await interaction.respond([]).catch(() => {});
+      }
+    }
+    return;
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   if (!interaction.guildId) {
