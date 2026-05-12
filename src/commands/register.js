@@ -21,7 +21,7 @@ module.exports = {
         .setDescription('Your character\'s name')
         .setRequired(true)
         .setMinLength(1)
-        .setMaxLength(32)
+        .setMaxLength(64)
     )
     .addStringOption(opt =>
       opt.setName('class1')

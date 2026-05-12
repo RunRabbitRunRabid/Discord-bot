@@ -1,5 +1,6 @@
 require('dotenv').config();
 const { Client, GatewayIntentBits, Collection } = require('discord.js');
+const { getUserCharacters } = require('./database');
 const fs = require('fs');
 const path = require('path');
 const { startScheduler } = require('./scheduler');
@@ -34,6 +35,20 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', async (interaction) => {
+  if (interaction.isAutocomplete()) {
+    const focused = interaction.options.getFocused(true);
+    if (focused.name === 'character') {
+      const characters = getUserCharacters(interaction.guildId, interaction.user.id);
+      const input = focused.value.toLowerCase();
+      const choices = characters
+        .filter(c => c.name.toLowerCase().includes(input))
+        .slice(0, 25)
+        .map(c => ({ name: c.name, value: c.name }));
+      return interaction.respond(choices).catch(() => {});
+    }
+    return interaction.respond([]).catch(() => {});
+  }
+
   if (!interaction.isChatInputCommand()) return;
 
   if (!interaction.guildId) {
