@@ -1,7 +1,6 @@
 # 🌸 Hero School Discord Bot
 
-A fully slash-command based Discord bot for the **Hero School** roleplay server. Built with Node.js, discord.js v14+, and SQLite for persistent, guild-specific data.
-
+bing bong, hero school bot
 ---
 
 ## Features
