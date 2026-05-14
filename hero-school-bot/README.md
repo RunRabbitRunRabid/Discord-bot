@@ -1,6 +1,6 @@
 # 🌸 Hero School Discord Bot
 
-bing bong, hero school bot
+bing bong, hero school bot (im tired)
 ---
 
 ## Features
