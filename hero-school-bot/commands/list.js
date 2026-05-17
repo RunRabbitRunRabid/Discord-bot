@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database/db');
-const { getTodayKey } = require('../utils/time');
+const { getTodayKey, getWeekKey } = require('../utils/time');
 
 const COMMAND_LABELS = {
   class: 'Class',
@@ -30,6 +30,8 @@ module.exports = {
       return interaction.reply({ content: `🌸 **${targetUser.username}** has no characters in this server yet.` });
     }
 
+    const weekKey = getWeekKey();
+
     const embed = new EmbedBuilder()
       .setTitle(`🌸 Characters — ${targetUser.username}`)
       .setColor(0xff9ec8)
@@ -45,14 +47,25 @@ module.exports = {
         return `${done ? '✅' : '⬜'} ${label}`;
       }).join(' · ');
 
+      // Check if this character received a weekly bonus this week
+      const weeklyBonus = db.prepare(
+        'SELECT bonus_xp FROM weekly_resets WHERE guild_id = ? AND character_id = ? AND reset_week = ? AND got_bonus = 1'
+      ).get(guildId, char.id, weekKey);
+
+      const lines = [
+        `**XP:** ${char.xp} · **Money:** $${Number(char.money).toFixed(2)}`,
+        `**Proficiencies:** ${char.subject1}, ${char.subject2}`,
+        `**After-School:** ${char.afterschool === 'club' ? '🌸 Club' : '🌸 Work'}`,
+        `**Today:** ${statusLines}`,
+      ];
+
+      if (weeklyBonus) {
+        lines.push(`🏆 **Weekly Bonus:** Top 3 reward — ${weeklyBonus.bonus_xp} XP head start`);
+      }
+
       embed.addFields({
         name: `${char.name}`,
-        value: [
-          `**XP:** ${char.xp} · **Money:** $${Number(char.money).toFixed(2)}`,
-          `**Proficiencies:** ${char.subject1}, ${char.subject2}`,
-          `**After-School:** ${char.afterschool === 'club' ? '🌸 Club' : '🌸 Work'}`,
-          `**Today:** ${statusLines}`,
-        ].join('\n'),
+        value: lines.join('\n'),
         inline: false,
       });
     }

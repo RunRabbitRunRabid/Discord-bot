@@ -30,6 +30,14 @@ function getTodayKey() {
   return getNowEastern().toISODate();
 }
 
+// Returns an ISO week key like "2026-W20" based on Eastern Time
+function getWeekKey() {
+  const now = getNowEastern();
+  const year = now.weekYear;
+  const week = String(now.weekNumber).padStart(2, '0');
+  return `${year}-W${week}`;
+}
+
 function getTodayClass() {
   const dow = getNowEastern().weekday;
   return DAILY_SCHEDULE[dow];
@@ -49,6 +57,7 @@ module.exports = {
   DAY_NAMES,
   getNowEastern,
   getTodayKey,
+  getWeekKey,
   getTodayClass,
   getTodayDayName,
   getFormattedTime,
