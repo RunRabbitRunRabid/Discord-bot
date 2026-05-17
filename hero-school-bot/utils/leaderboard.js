@@ -50,6 +50,11 @@ async function updateLeaderboard(client, guildId) {
         name: '💰 Wealth Leaderboard',
         value: wealthLines,
         inline: true,
+      },
+      {
+        name: '🔄 Weekly XP Reset',
+        value: 'Resets every **Monday at midnight ET**\n🏆 Top 3 earn a **10 XP head start**',
+        inline: false,
       }
     )
     .setFooter({ text: 'Updated live • Hero School Academy' })

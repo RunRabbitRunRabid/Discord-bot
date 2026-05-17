@@ -42,6 +42,18 @@ db.exec(`
     channel_id TEXT NOT NULL,
     message_id TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS weekly_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id TEXT NOT NULL,
+    character_id INTEGER NOT NULL,
+    reset_week TEXT NOT NULL,
+    got_bonus BOOLEAN DEFAULT 0,
+    bonus_xp INTEGER DEFAULT 0,
+    reset_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    UNIQUE(guild_id, character_id, reset_week),
+    FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+  );
 `);
 
 module.exports = db;

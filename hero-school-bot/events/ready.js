@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
+const { performWeeklyReset } = require('../utils/weeklyReset');
 
 module.exports = {
   name: 'ready',
@@ -12,6 +13,14 @@ module.exports = {
     // Cooldowns are date-key based (YYYY-MM-DD in ET) so they expire naturally; no DB purge required.
     cron.schedule('0 0 * * *', async () => {
       console.log('[Cron] Midnight ET reset — leaderboards updated');
+      await updateAllLeaderboards(client).catch(console.error);
+    }, { timezone: 'America/New_York' });
+
+    // Monday at midnight ET — weekly XP reset. Top 3 receive a 10 XP head start.
+    // Runs after the daily cron so leaderboards reflect the fresh state.
+    cron.schedule('0 0 * * 1', async () => {
+      console.log('[Cron] Weekly reset — Monday midnight ET');
+      await performWeeklyReset(client).catch(console.error);
       await updateAllLeaderboards(client).catch(console.error);
     }, { timezone: 'America/New_York' });
 
