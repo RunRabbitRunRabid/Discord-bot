@@ -13,11 +13,11 @@ async function updateLeaderboard(client, guildId) {
   if (!channel) return;
 
   const xpTop = db.prepare(
-    'SELECT name, xp, money FROM characters WHERE guild_id = ? ORDER BY xp DESC LIMIT 10'
+    'SELECT name, xp, money, is_npc FROM characters WHERE guild_id = ? ORDER BY xp DESC LIMIT 10'
   ).all(guildId);
 
   const wealthTop = db.prepare(
-    'SELECT name, xp, money FROM characters WHERE guild_id = ? ORDER BY money DESC LIMIT 10'
+    'SELECT name, xp, money, is_npc FROM characters WHERE guild_id = ? ORDER BY money DESC LIMIT 10'
   ).all(guildId);
 
   const todayClass = getTodayClass();
@@ -25,11 +25,11 @@ async function updateLeaderboard(client, guildId) {
   const currentTime = getFormattedTime();
 
   const heroLines = xpTop.length
-    ? xpTop.map((c, i) => `\`${String(i + 1).padStart(2, '0')}.\` **${c.name}** — ${c.xp} XP`).join('\n')
+    ? xpTop.map((c, i) => `\`${String(i + 1).padStart(2, '0')}.\` **${c.is_npc ? '🤖 ' : ''}${c.name}** — ${c.xp} XP`).join('\n')
     : '*No characters yet.*';
 
   const wealthLines = wealthTop.length
-    ? wealthTop.map((c, i) => `\`${String(i + 1).padStart(2, '0')}.\` **${c.name}** — $${Number(c.money).toFixed(2)}`).join('\n')
+    ? wealthTop.map((c, i) => `\`${String(i + 1).padStart(2, '0')}.\` **${c.is_npc ? '🤖 ' : ''}${c.name}** — $${Number(c.money).toFixed(2)}`).join('\n')
     : '*No characters yet.*';
 
   const embed = new EmbedBuilder()

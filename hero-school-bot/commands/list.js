@@ -9,6 +9,12 @@ const COMMAND_LABELS = {
   afterschool: 'After-School',
 };
 
+const QUALITY_LABELS = {
+  good:   '🟢 Good',
+  medium: '🟡 Medium',
+  bad:    '🔴 Bad',
+};
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('list')
@@ -38,33 +44,44 @@ module.exports = {
       .setFooter({ text: 'Hero School Academy' });
 
     for (const char of characters) {
-      const usedCmds = db.prepare(
-        'SELECT command FROM cooldowns WHERE guild_id = ? AND character_id = ? AND used_on = ?'
-      ).all(guildId, char.id, todayKey).map(r => r.command);
-
-      const statusLines = Object.entries(COMMAND_LABELS).map(([cmd, label]) => {
-        const done = usedCmds.includes(cmd);
-        return `${done ? '✅' : '⬜'} ${label}`;
-      }).join(' · ');
-
-      // Check if this character received a weekly bonus this week
-      const weeklyBonus = db.prepare(
-        'SELECT bonus_xp FROM weekly_resets WHERE guild_id = ? AND character_id = ? AND reset_week = ? AND got_bonus = 1'
-      ).get(guildId, char.id, weekKey);
+      const isNPC = Boolean(char.is_npc);
 
       const lines = [
         `**XP:** ${char.xp} · **Money:** $${Number(char.money).toFixed(2)}`,
         `**Proficiencies:** ${char.subject1}, ${char.subject2}`,
         `**After-School:** ${char.afterschool === 'club' ? '🌸 Club' : '🌸 Work'}`,
-        `**Today:** ${statusLines}`,
       ];
 
-      if (weeklyBonus) {
-        lines.push(`🏆 **Weekly Bonus:** Top 3 reward — ${weeklyBonus.bonus_xp} XP head start`);
+      if (isNPC) {
+        // NPCs auto-roll — show quality instead of daily activity status
+        const qualityLabel = QUALITY_LABELS[char.student_quality] ?? '❓ Unknown';
+        lines.push(`**Student Quality:** ${qualityLabel}`);
+        lines.push(`🤖 *NPC — auto-rolls all 4 activities daily at 6 AM ET*`);
+      } else {
+        // Human characters — show daily activity checklist
+        const usedCmds = db.prepare(
+          'SELECT command FROM cooldowns WHERE guild_id = ? AND character_id = ? AND used_on = ?'
+        ).all(guildId, char.id, todayKey).map(r => r.command);
+
+        const statusLines = Object.entries(COMMAND_LABELS).map(([cmd, label]) => {
+          const done = usedCmds.includes(cmd);
+          return `${done ? '✅' : '⬜'} ${label}`;
+        }).join(' · ');
+
+        lines.push(`**Today:** ${statusLines}`);
+
+        // Check if this character received a weekly bonus this week
+        const weeklyBonus = db.prepare(
+          'SELECT bonus_xp FROM weekly_resets WHERE guild_id = ? AND character_id = ? AND reset_week = ? AND got_bonus = 1'
+        ).get(guildId, char.id, weekKey);
+
+        if (weeklyBonus) {
+          lines.push(`🏆 **Weekly Bonus:** Top 3 reward — ${weeklyBonus.bonus_xp} XP head start`);
+        }
       }
 
       embed.addFields({
-        name: `${char.name}`,
+        name: isNPC ? `🤖 ${char.name}` : char.name,
         value: lines.join('\n'),
         inline: false,
       });
