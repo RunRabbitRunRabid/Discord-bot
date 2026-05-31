@@ -52,19 +52,27 @@ module.exports = {
         'SELECT bonus_xp FROM weekly_resets WHERE guild_id = ? AND character_id = ? AND reset_week = ? AND got_bonus = 1'
       ).get(guildId, char.id, weekKey);
 
+      const QUALITY_LABELS = { good: '🟢 Good', medium: '🟡 Medium', bad: '🔴 Bad' };
+
       const lines = [
         `**XP:** ${char.xp} · **Money:** $${Number(char.money).toFixed(2)}`,
         `**Proficiencies:** ${char.subject1}, ${char.subject2}`,
         `**After-School:** ${char.afterschool === 'club' ? '🌸 Club' : '🌸 Work'}`,
-        `**Today:** ${statusLines}`,
       ];
+
+      if (char.is_npc) {
+        const qualityLabel = QUALITY_LABELS[char.student_quality] ?? char.student_quality;
+        lines.push(`🤖 **NPC** — Student Quality: ${qualityLabel}`);
+      } else {
+        lines.push(`**Today:** ${statusLines}`);
+      }
 
       if (weeklyBonus) {
         lines.push(`🏆 **Weekly Bonus:** Top 3 reward — ${weeklyBonus.bonus_xp} XP head start`);
       }
 
       embed.addFields({
-        name: `${char.name}`,
+        name: char.is_npc ? `🤖 ${char.name}` : char.name,
         value: lines.join('\n'),
         inline: false,
       });

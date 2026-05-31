@@ -23,6 +23,8 @@ db.exec(`
     afterschool TEXT NOT NULL CHECK(afterschool IN ('club', 'work')),
     money REAL NOT NULL DEFAULT 0,
     xp INTEGER NOT NULL DEFAULT 0,
+    is_npc BOOLEAN NOT NULL DEFAULT 0,
+    student_quality TEXT CHECK(student_quality IN ('good', 'medium', 'bad')),
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     UNIQUE(guild_id, name)
   );
@@ -55,5 +57,22 @@ db.exec(`
     FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
   );
 `);
+
+// Migrations: safely add NPC columns to existing databases that predate this schema.
+// ALTER TABLE ADD COLUMN is a no-op-safe pattern in SQLite — we catch the error if the
+// column already exists rather than checking the schema first, keeping this idempotent.
+const migrations = [
+  "ALTER TABLE characters ADD COLUMN is_npc BOOLEAN NOT NULL DEFAULT 0",
+  "ALTER TABLE characters ADD COLUMN student_quality TEXT CHECK(student_quality IN ('good', 'medium', 'bad'))",
+];
+
+for (const sql of migrations) {
+  try {
+    db.exec(sql);
+  } catch (err) {
+    // "duplicate column name" means the column already exists — safe to ignore.
+    if (!err.message.includes('duplicate column name')) throw err;
+  }
+}
 
 module.exports = db;
