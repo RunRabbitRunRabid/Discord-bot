@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
 const { performWeeklyReset } = require('../utils/weeklyReset');
+const { performNPCDailyRolls } = require('../utils/npcRolls');
 
 module.exports = {
   name: 'ready',
@@ -13,6 +14,14 @@ module.exports = {
     // Cooldowns are date-key based (YYYY-MM-DD in ET) so they expire naturally; no DB purge required.
     cron.schedule('0 0 * * *', async () => {
       console.log('[Cron] Midnight ET reset — leaderboards updated');
+      await updateAllLeaderboards(client).catch(console.error);
+    }, { timezone: 'America/New_York' });
+
+    // 6 AM ET — NPC daily rolls. Each NPC earns XP based on their student quality,
+    // then leaderboards are refreshed so the new standings are visible immediately.
+    cron.schedule('0 6 * * *', async () => {
+      console.log('[Cron] Daily NPC rolls — 6 AM ET');
+      await performNPCDailyRolls(client).catch(console.error);
       await updateAllLeaderboards(client).catch(console.error);
     }, { timezone: 'America/New_York' });
 
