@@ -54,6 +54,15 @@ db.exec(`
     UNIQUE(guild_id, character_id, reset_week),
     FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS npcs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id TEXT NOT NULL,
+    character_id INTEGER NOT NULL,
+    quality TEXT NOT NULL CHECK(quality IN ('good', 'medium', 'bad')),
+    UNIQUE(guild_id, character_id),
+    FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+  );
 `);
 
 module.exports = db;

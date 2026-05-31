@@ -1,6 +1,7 @@
 const cron = require('node-cron');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
 const { performWeeklyReset } = require('../utils/weeklyReset');
+const { performNPCDailyRolls } = require('../utils/npcRolls');
 
 module.exports = {
   name: 'ready',
@@ -21,6 +22,15 @@ module.exports = {
     cron.schedule('0 0 * * 1', async () => {
       console.log('[Cron] Weekly reset — Monday midnight ET');
       await performWeeklyReset(client).catch(console.error);
+      await updateAllLeaderboards(client).catch(console.error);
+    }, { timezone: 'America/New_York' });
+
+    // 6 AM ET daily — simulate all four activities for every registered NPC.
+    // NPCs earn XP from /class (with proficiency), /study, /train, and
+    // /afterschool (XP + money), scaled by their quality tier.
+    cron.schedule('0 6 * * *', async () => {
+      console.log('[Cron] 6 AM ET — running NPC daily rolls');
+      await performNPCDailyRolls().catch(console.error);
       await updateAllLeaderboards(client).catch(console.error);
     }, { timezone: 'America/New_York' });
 
