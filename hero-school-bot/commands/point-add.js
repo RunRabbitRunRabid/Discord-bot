@@ -4,7 +4,7 @@ const db = require('../database/db');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('point-add')
-    .setDescription('(Admin) Add QuickTime points to a character')
+    .setDescription('(Admin) Add QuickTime XP to a character')
     .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
     .addUserOption(opt =>
       opt
@@ -21,14 +21,14 @@ module.exports = {
     .addIntegerOption(opt =>
       opt
         .setName('amount')
-        .setDescription('Number of points to add')
+        .setDescription('Number of XP to add')
         .setRequired(true)
         .setMinValue(1)
     )
     .addStringOption(opt =>
       opt
         .setName('reason')
-        .setDescription('Optional reason for the point award')
+        .setDescription('Optional reason for the XP award')
         .setRequired(false)
     ),
 
@@ -58,25 +58,23 @@ module.exports = {
       });
     }
 
-    // Upsert points
+    // Award XP directly to the character
     db.prepare(`
-      INSERT INTO quicktime_points (guild_id, user_id, character_id, character_name, points)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(guild_id, user_id, character_id) DO UPDATE SET points = points + excluded.points
-    `).run(guildId, targetUser.id, character.id, character.name, amount);
+      UPDATE characters SET xp = xp + ? WHERE id = ?
+    `).run(amount, character.id);
 
     const newTotal = db.prepare(
-      'SELECT points FROM quicktime_points WHERE guild_id = ? AND character_id = ?'
-    ).get(guildId, character.id).points;
+      'SELECT xp FROM characters WHERE id = ?'
+    ).get(character.id).xp;
 
     const embed = new EmbedBuilder()
-      .setTitle('⚡ Points Added')
+      .setTitle('⚡ XP Awarded')
       .setColor(0xffd700)
       .addFields(
         { name: 'Character', value: charName, inline: true },
         { name: 'Player', value: `${targetUser}`, inline: true },
-        { name: 'Points Added', value: `+${amount}`, inline: true },
-        { name: 'New Total', value: `${newTotal} pts`, inline: true },
+        { name: 'XP Added', value: `+${amount} XP`, inline: true },
+        { name: 'New Total', value: `${newTotal} XP`, inline: true },
         ...(reason ? [{ name: 'Reason', value: reason, inline: false }] : []),
       )
       .setFooter({ text: `Awarded by ${interaction.user.tag} • Hero School Academy` });
@@ -84,3 +82,4 @@ module.exports = {
     await interaction.reply({ embeds: [embed] });
   },
 };
+
