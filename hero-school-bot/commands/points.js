@@ -27,11 +27,7 @@ module.exports = {
       });
     }
 
-    const pointRow = db.prepare(
-      'SELECT points FROM quicktime_points WHERE guild_id = ? AND character_id = ?'
-    ).get(guildId, character.id);
-
-    const points = pointRow?.points ?? 0;
+    const points = character.xp;
 
     // Count events participated in
     const eventCount = db.prepare(
@@ -39,10 +35,10 @@ module.exports = {
     ).get(character.id).cnt;
 
     const embed = new EmbedBuilder()
-      .setTitle(`⚡ QuickTime Points — ${charName}`)
+      .setTitle(`⚡ Character XP — ${charName}`)
       .setColor(0xffd700)
       .addFields(
-        { name: '🏅 Total Points', value: `${points} pts`, inline: true },
+        { name: '🏅 Total XP', value: `${points} XP`, inline: true },
         { name: '📋 Events Completed', value: `${eventCount}`, inline: true },
       )
       .setFooter({ text: 'Hero School Academy' });

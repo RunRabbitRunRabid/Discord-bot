@@ -58,16 +58,10 @@ module.exports = {
       });
     }
 
-    // Upsert points
-    db.prepare(`
-      INSERT INTO quicktime_points (guild_id, user_id, character_id, character_name, points)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(guild_id, user_id, character_id) DO UPDATE SET points = points + excluded.points
-    `).run(guildId, targetUser.id, character.id, character.name, amount);
+    // Add XP directly to character
+    db.prepare('UPDATE characters SET xp = xp + ? WHERE id = ?').run(amount, character.id);
 
-    const newTotal = db.prepare(
-      'SELECT points FROM quicktime_points WHERE guild_id = ? AND character_id = ?'
-    ).get(guildId, character.id).points;
+    const newTotal = db.prepare('SELECT xp FROM characters WHERE id = ?').get(character.id).xp;
 
     const embed = new EmbedBuilder()
       .setTitle('⚡ Points Added')

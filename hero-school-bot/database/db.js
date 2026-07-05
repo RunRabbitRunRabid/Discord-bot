@@ -100,16 +100,6 @@ db.exec(`
     joined_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     FOREIGN KEY(event_id) REFERENCES quicktime_events(event_id) ON DELETE CASCADE
   );
-
-  CREATE TABLE IF NOT EXISTS quicktime_points (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    guild_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    character_id INTEGER NOT NULL,
-    character_name TEXT NOT NULL,
-    points INTEGER NOT NULL DEFAULT 0,
-    UNIQUE(guild_id, user_id, character_id)
-  );
 `);
 
 // Migrate existing databases: add NPC columns if they don't exist yet
