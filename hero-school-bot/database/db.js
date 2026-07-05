@@ -63,9 +63,8 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS quicktime_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT PRIMARY KEY,
     guild_id TEXT NOT NULL,
-    event_id TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     emoji TEXT,
@@ -74,8 +73,7 @@ db.exec(`
     is_active BOOLEAN DEFAULT 1,
     message_id TEXT,
     created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-    completed_at INTEGER,
-    UNIQUE(guild_id, event_id)
+    completed_at INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS quicktime_participants (
