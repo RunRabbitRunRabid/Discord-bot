@@ -57,6 +57,21 @@ db.exec(`
     FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
   );
 
+`);
+
+// Drop and recreate quicktime tables with correct schema
+try {
+  db.exec('DROP TABLE IF EXISTS quicktime_participants');
+  db.exec('DROP TABLE IF EXISTS quicktime_events');
+  db.exec('DROP TABLE IF EXISTS quicktime_points');
+  db.exec('DROP TABLE IF EXISTS quicktime_config');
+  console.log('[Database] Dropped old quicktime tables for schema migration');
+} catch (err) {
+  console.error('[Database] Error dropping tables:', err.message);
+}
+
+// Recreate with correct schema
+db.exec(`
   CREATE TABLE IF NOT EXISTS quicktime_config (
     guild_id TEXT PRIMARY KEY,
     channel_id TEXT NOT NULL
@@ -81,6 +96,7 @@ db.exec(`
     event_id TEXT NOT NULL,
     character_id INTEGER NOT NULL,
     character_name TEXT NOT NULL,
+    user_id TEXT NOT NULL,
     joined_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
     FOREIGN KEY(event_id) REFERENCES quicktime_events(event_id) ON DELETE CASCADE
   );

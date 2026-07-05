@@ -5,6 +5,7 @@ const { randomUUID } = require('crypto');
 const db = require('../database/db');
 const { EVENTS, COOPERATIVE_EVENTS } = require('./quicktimeEvents');
 const { DateTime } = require('luxon');
+const { updateAllLeaderboards } = require('./leaderboard');
 
 const TIMEZONE = 'America/New_York';
 const POINTS_PER_EVENT = 5;
@@ -194,6 +195,11 @@ async function completeEvent(client, guildId, eventId, participants) {
   }
 
   activeEvents.delete(guildId);
+
+  // Update leaderboards after awarding points
+  await updateAllLeaderboards(client).catch(err =>
+    console.error('[QuickTime] Failed to update leaderboards after event completion:', err.message)
+  );
 
   // Edit the original message if we can
   const config = db.prepare('SELECT channel_id FROM quicktime_config WHERE guild_id = ?').get(guildId);
