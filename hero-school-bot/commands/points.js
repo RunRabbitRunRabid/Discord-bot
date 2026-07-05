@@ -4,7 +4,7 @@ const db = require('../database/db');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('points')
-    .setDescription('Check the QuickTime points for a character')
+    .setDescription('Check the QuickTime XP for a character')
     .addStringOption(opt =>
       opt
         .setName('character')
@@ -27,22 +27,16 @@ module.exports = {
       });
     }
 
-    const pointRow = db.prepare(
-      'SELECT points FROM quicktime_points WHERE guild_id = ? AND character_id = ?'
-    ).get(guildId, character.id);
-
-    const points = pointRow?.points ?? 0;
-
     // Count events participated in
     const eventCount = db.prepare(
       'SELECT COUNT(*) as cnt FROM quicktime_participants WHERE character_id = ?'
     ).get(character.id).cnt;
 
     const embed = new EmbedBuilder()
-      .setTitle(`⚡ QuickTime Points — ${charName}`)
+      .setTitle(`⚡ QuickTime XP — ${charName}`)
       .setColor(0xffd700)
       .addFields(
-        { name: '🏅 Total Points', value: `${points} pts`, inline: true },
+        { name: '🏅 Total XP', value: `${character.xp} XP`, inline: true },
         { name: '📋 Events Completed', value: `${eventCount}`, inline: true },
       )
       .setFooter({ text: 'Hero School Academy' });
@@ -50,3 +44,4 @@ module.exports = {
     await interaction.reply({ embeds: [embed] });
   },
 };
+

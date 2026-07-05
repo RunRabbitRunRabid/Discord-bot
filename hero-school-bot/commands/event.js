@@ -126,18 +126,18 @@ module.exports = {
     const isComplete = !event.is_cooperative || participants.length >= event.participants_needed;
 
     if (isComplete) {
-      // Complete the event — awards points and edits the original message
+      // Complete the event — awards XP and edits the original message
       await completeEvent(interaction.client, guildId, event.event_id, participants);
 
-      // Refresh leaderboard after points are awarded
+      // Refresh leaderboard after XP is awarded
       await updateAllLeaderboards(interaction.client).catch(err =>
         console.error('[Event] Failed to update leaderboards:', err.message)
       );
 
       return interaction.editReply({
         content: event.is_cooperative
-          ? `✅ **${character.name}** joined the event and the team is complete! Everyone earns **+5 Points**!`
-          : `✅ **${character.name}** claimed the event and earned **+5 Points**!`,
+          ? `✅ **${character.name}** joined the event and the team is complete! Everyone earns **+5 XP**!`
+          : `✅ **${character.name}** claimed the event and earned **+5 XP**!`,
       });
     }
 
