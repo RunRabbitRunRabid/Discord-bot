@@ -22,20 +22,37 @@ module.exports = {
     try {
 
     // ── Validate character ────────────────────────────────────────────────────
-    const character = db.prepare(
+    // First try exact match (case-sensitive)
+    let character = db.prepare(
       'SELECT * FROM characters WHERE guild_id = ? AND name = ? AND is_npc = 0'
     ).get(guildId, charName);
 
+    // If no exact match, try case-insensitive match
     if (!character) {
+      character = db.prepare(
+        'SELECT * FROM characters WHERE guild_id = ? AND LOWER(name) = LOWER(?) AND is_npc = 0'
+      ).get(guildId, charName);
+    }
+
+    if (!character) {
+      // Show available characters to help the player
+      const available = db.prepare(
+        'SELECT name FROM characters WHERE guild_id = ? AND is_npc = 0 ORDER BY name'
+      ).all(guildId);
+
+      const charList = available.length > 0
+        ? available.map(c => `• ${c.name}`).join('\n')
+        : 'No characters found.';
+
       return interaction.reply({
-        content: `🌸 No character named **${charName}** found in this server.`,
+        content: `🌸 No character named **${charName}** found in this server.\n\n**Your characters:**\n${charList}`,
         ephemeral: true,
       });
     }
 
     if (character.user_id !== userId) {
       return interaction.reply({
-        content: `🌸 **${charName}** doesn't belong to you.`,
+        content: `🌸 **${character.name}** doesn't belong to you.`,
         ephemeral: true,
       });
     }
@@ -59,7 +76,7 @@ module.exports = {
 
     if (alreadyIn) {
       return interaction.reply({
-        content: `🌸 **${charName}** has already joined this event!`,
+        content: `🌸 **${character.name}** has already joined this event!`,
         ephemeral: true,
       });
     }
@@ -119,8 +136,8 @@ module.exports = {
 
       return interaction.editReply({
         content: event.is_cooperative
-          ? `✅ **${charName}** joined the event and the team is complete! Everyone earns **+5 Points**!`
-          : `✅ **${charName}** claimed the event and earned **+5 Points**!`,
+          ? `✅ **${character.name}** joined the event and the team is complete! Everyone earns **+5 Points**!`
+          : `✅ **${character.name}** claimed the event and earned **+5 Points**!`,
       });
     }
 
@@ -152,7 +169,7 @@ module.exports = {
 
     const spotsLeft = event.participants_needed - participants.length;
     return interaction.editReply({
-      content: `✅ **${charName}** joined the cooperative event! **${spotsLeft}** more participant(s) needed.`,
+      content: `✅ **${character.name}** joined the cooperative event! **${spotsLeft}** more participant(s) needed.`,
     });
     } catch (err) {
       console.error('[Event] Unexpected error in /event command:', err);
@@ -164,3 +181,4 @@ module.exports = {
     }
   },
 };
+
