@@ -8,24 +8,24 @@ const { DateTime } = require('luxon');
 const { updateAllLeaderboards } = require('./leaderboard');
 
 const TIMEZONE = 'America/New_York';
-const POINTS_PER_EVENT = 5;
+const XP_PER_EVENT = 5;
 
 // Completion message templates for normal events
 const SOLO_COMPLETIONS = [
-  (name) => `**${name}** was so helpful and completed this task! (+${POINTS_PER_EVENT} Points)`,
-  (name) => `**${name}** did an outstanding job handling this request! (+${POINTS_PER_EVENT} Points)`,
-  (name) => `**${name}** stepped up without hesitation and got the job done! (+${POINTS_PER_EVENT} Points)`,
-  (name) => `**${name}** answered the call and everyone appreciated the help! (+${POINTS_PER_EVENT} Points)`,
-  (name) => `**${name}** came through when it mattered most! (+${POINTS_PER_EVENT} Points)`,
-  (name) => `**${name}** handled this with total professionalism! (+${POINTS_PER_EVENT} Points)`,
+  (name) => `**${name}** was so helpful and completed this task! (+${XP_PER_EVENT} XP)`,
+  (name) => `**${name}** did an outstanding job handling this request! (+${XP_PER_EVENT} XP)`,
+  (name) => `**${name}** stepped up without hesitation and got the job done! (+${XP_PER_EVENT} XP)`,
+  (name) => `**${name}** answered the call and everyone appreciated the help! (+${XP_PER_EVENT} XP)`,
+  (name) => `**${name}** came through when it mattered most! (+${XP_PER_EVENT} XP)`,
+  (name) => `**${name}** handled this with total professionalism! (+${XP_PER_EVENT} XP)`,
 ];
 
 // Completion message templates for cooperative events
 const COOP_COMPLETIONS = [
-  (names) => `**${names}** worked together flawlessly during this assignment! Everyone earned +${POINTS_PER_EVENT} Points!`,
-  (names) => `**${names}** showed incredible teamwork and got it done! Everyone earned +${POINTS_PER_EVENT} Points!`,
-  (names) => `**${names}** stepped up as a unit and crushed this challenge! Everyone earned +${POINTS_PER_EVENT} Points!`,
-  (names) => `**${names}** proved that heroes are stronger together! Everyone earned +${POINTS_PER_EVENT} Points!`,
+  (names) => `**${names}** worked together flawlessly during this assignment! Everyone earned +${XP_PER_EVENT} XP!`,
+  (names) => `**${names}** showed incredible teamwork and got it done! Everyone earned +${XP_PER_EVENT} XP!`,
+  (names) => `**${names}** stepped up as a unit and crushed this challenge! Everyone earned +${XP_PER_EVENT} XP!`,
+  (names) => `**${names}** proved that heroes are stronger together! Everyone earned +${XP_PER_EVENT} XP!`,
 ];
 
 function randomItem(arr) {
@@ -176,7 +176,7 @@ function buildCompletedEmbed({ emoji, title, description, cooperative, participa
 }
 
 /**
- * Marks an event complete, awards points, and edits the original message.
+ * Marks an event complete, awards XP, and edits the original message.
  */
 async function completeEvent(client, guildId, eventId, participants) {
   const row = db.prepare('SELECT * FROM quicktime_events WHERE event_id = ?').get(eventId);
@@ -185,18 +185,16 @@ async function completeEvent(client, guildId, eventId, participants) {
   const now = Math.floor(Date.now() / 1000);
   db.prepare('UPDATE quicktime_events SET is_active = 0, completed_at = ? WHERE event_id = ?').run(now, eventId);
 
-  // Award points to each participant
+  // Award XP to each participant's character
   for (const p of participants) {
     db.prepare(`
-      INSERT INTO quicktime_points (guild_id, user_id, character_id, character_name, points)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(guild_id, user_id, character_id) DO UPDATE SET points = points + excluded.points
-    `).run(guildId, p.user_id, p.character_id, p.character_name, POINTS_PER_EVENT);
+      UPDATE characters SET xp = xp + ? WHERE id = ?
+    `).run(XP_PER_EVENT, p.character_id);
   }
 
   activeEvents.delete(guildId);
 
-  // Update leaderboards after awarding points
+  // Update leaderboards after awarding XP
   await updateAllLeaderboards(client).catch(err =>
     console.error('[QuickTime] Failed to update leaderboards after event completion:', err.message)
   );
@@ -297,5 +295,6 @@ module.exports = {
   scheduleAllGuilds,
   buildEventEmbed,
   activeEvents,
-  POINTS_PER_EVENT,
+  XP_PER_EVENT,
 };
+
