@@ -185,13 +185,9 @@ async function completeEvent(client, guildId, eventId, participants) {
   const now = Math.floor(Date.now() / 1000);
   db.prepare('UPDATE quicktime_events SET is_active = 0, completed_at = ? WHERE event_id = ?').run(now, eventId);
 
-  // Award points to each participant
+  // Award XP directly to each participant's character
   for (const p of participants) {
-    db.prepare(`
-      INSERT INTO quicktime_points (guild_id, user_id, character_id, character_name, points)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(guild_id, user_id, character_id) DO UPDATE SET points = points + excluded.points
-    `).run(guildId, p.user_id, p.character_id, p.character_name, POINTS_PER_EVENT);
+    db.prepare('UPDATE characters SET xp = xp + ? WHERE id = ?').run(POINTS_PER_EVENT, p.character_id);
   }
 
   activeEvents.delete(guildId);
