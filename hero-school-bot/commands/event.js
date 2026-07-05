@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database/db');
 const { completeEvent, buildEventEmbed } = require('../utils/quicktimeManager');
+const { updateAllLeaderboards } = require('../utils/leaderboard');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -17,6 +18,8 @@ module.exports = {
     const charName = interaction.options.getString('character').trim();
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
+
+    try {
 
     // ── Validate character ────────────────────────────────────────────────────
     const character = db.prepare(
@@ -91,13 +94,13 @@ module.exports = {
 
     // ── Add participant ───────────────────────────────────────────────────────
     db.prepare(`
-      INSERT INTO quicktime_participants (event_id, character_id, character_name)
-      VALUES (?, ?, ?)
-    `).run(event.event_id, character.id, character.name);
+      INSERT INTO quicktime_participants (event_id, character_id, character_name, user_id)
+      VALUES (?, ?, ?, ?)
+    `).run(event.event_id, character.id, character.name, userId);
 
     // Fetch updated participant list
     const participants = db.prepare(
-      'SELECT qp.*, c.user_id FROM quicktime_participants qp JOIN characters c ON c.id = qp.character_id WHERE qp.event_id = ?'
+      'SELECT * FROM quicktime_participants WHERE event_id = ?'
     ).all(event.event_id);
 
     await interaction.deferReply({ ephemeral: true });
@@ -108,6 +111,11 @@ module.exports = {
     if (isComplete) {
       // Complete the event — awards points and edits the original message
       await completeEvent(interaction.client, guildId, event.event_id, participants);
+
+      // Refresh leaderboard after points are awarded
+      await updateAllLeaderboards(interaction.client).catch(err =>
+        console.error('[Event] Failed to update leaderboards:', err.message)
+      );
 
       return interaction.editReply({
         content: event.is_cooperative
@@ -146,5 +154,13 @@ module.exports = {
     return interaction.editReply({
       content: `✅ **${charName}** joined the cooperative event! **${spotsLeft}** more participant(s) needed.`,
     });
+    } catch (err) {
+      console.error('[Event] Unexpected error in /event command:', err);
+      const method = interaction.deferred ? 'editReply' : 'reply';
+      return interaction[method]({
+        content: '❌ Something went wrong while processing the event. Please try again.',
+        ephemeral: true,
+      }).catch(() => {});
+    }
   },
 };
