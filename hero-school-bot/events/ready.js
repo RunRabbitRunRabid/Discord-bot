@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
 const { performWeeklyReset } = require('../utils/weeklyReset');
 const { performNPCDailyRolls } = require('../utils/npcRolls');
+const { scheduleAllGuilds } = require('../utils/quicktimeManager');
 
 module.exports = {
   name: 'ready',
@@ -9,12 +10,15 @@ module.exports = {
   async execute(client) {
     console.log(`[Ready] Logged in as ${client.user.tag}`);
 
-    // Midnight Eastern Time — reset cooldowns and update leaderboards.
+    // Midnight Eastern Time — reset cooldowns, update leaderboards, and schedule
+    // the next day's QuickTime events for all configured guilds.
     // node-cron's timezone option handles EST/EDT automatically — no manual UTC offset needed.
     // Cooldowns are date-key based (YYYY-MM-DD in ET) so they expire naturally; no DB purge required.
     cron.schedule('0 0 * * *', async () => {
       console.log('[Cron] Midnight ET reset — leaderboards updated');
       await updateAllLeaderboards(client).catch(console.error);
+      console.log('[Cron] Midnight ET — scheduling QuickTime events for the new day');
+      await scheduleAllGuilds(client).catch(console.error);
     }, { timezone: 'America/New_York' });
 
     // 6 AM ET — NPC daily rolls. All 4 activities are auto-rolled for every NPC.
@@ -40,6 +44,10 @@ module.exports = {
 
     // Initial leaderboard update on startup
     await updateAllLeaderboards(client).catch(console.error);
+
+    // Schedule QuickTime events for today across all configured guilds
+    await scheduleAllGuilds(client).catch(console.error);
+
     console.log('[Ready] Hero School bot is online and ready!');
   },
 };

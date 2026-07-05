@@ -56,6 +56,46 @@ db.exec(`
     UNIQUE(guild_id, character_id, reset_week),
     FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
   );
+
+  CREATE TABLE IF NOT EXISTS quicktime_config (
+    guild_id TEXT PRIMARY KEY,
+    channel_id TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS quicktime_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id TEXT NOT NULL,
+    event_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    emoji TEXT,
+    is_cooperative BOOLEAN DEFAULT 0,
+    participants_needed INTEGER DEFAULT 1,
+    is_active BOOLEAN DEFAULT 1,
+    message_id TEXT,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    completed_at INTEGER,
+    UNIQUE(guild_id, event_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS quicktime_participants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL,
+    character_id INTEGER NOT NULL,
+    character_name TEXT NOT NULL,
+    joined_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    FOREIGN KEY(event_id) REFERENCES quicktime_events(event_id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS quicktime_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    character_id INTEGER NOT NULL,
+    character_name TEXT NOT NULL,
+    points INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(guild_id, user_id, character_id)
+  );
 `);
 
 // Migrate existing databases: add NPC columns if they don't exist yet
