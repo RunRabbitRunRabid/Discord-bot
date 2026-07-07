@@ -12,9 +12,20 @@ async function updateLeaderboard(client, guildId) {
   const channel = guild.channels.cache.get(row.channel_id);
   if (!channel) return;
 
-  const xpTop = db.prepare(
-    'SELECT name, xp, money, is_npc FROM characters WHERE guild_id = ? ORDER BY xp DESC LIMIT 10'
-  ).all(guildId);
+  const xpTop = db.prepare(`
+    SELECT
+      c.name,
+      c.xp,
+      c.money,
+      c.is_npc,
+      COALESCE(qp.points, 0) as quicktime_points,
+      (c.xp + COALESCE(qp.points, 0)) as total_points
+    FROM characters c
+    LEFT JOIN quicktime_points qp ON qp.guild_id = ? AND qp.character_id = c.id
+    WHERE c.guild_id = ?
+    ORDER BY total_points DESC
+    LIMIT 10
+  `).all(guildId, guildId);
 
   const wealthTop = db.prepare(
     'SELECT name, xp, money, is_npc FROM characters WHERE guild_id = ? ORDER BY money DESC LIMIT 10'
@@ -25,7 +36,13 @@ async function updateLeaderboard(client, guildId) {
   const currentTime = getFormattedTime();
 
   const heroLines = xpTop.length
-    ? xpTop.map((c, i) => `\`${String(i + 1).padStart(2, '0')}.\` **${c.is_npc ? '🤖 ' : ''}${c.name}** — ${c.xp} XP`).join('\n')
+    ? xpTop.map((c, i) => {
+        const total = c.total_points;
+        const breakdown = c.quicktime_points > 0
+          ? ` *(${c.xp} XP + ${c.quicktime_points} QuickTime)*`
+          : ` *(${c.xp} XP)*`;
+        return `\`${String(i + 1).padStart(2, '0')}.\` **${c.is_npc ? '🤖 ' : ''}${c.name}** — ${total} pts${breakdown}`;
+      }).join('\n')
     : '*No characters yet.*';
 
   const wealthLines = wealthTop.length
@@ -42,7 +59,7 @@ async function updateLeaderboard(client, guildId) {
         inline: false,
       },
       {
-        name: '⚡ Hero Leaderboard (XP)',
+        name: '⚡ Hero Leaderboard (Total Points)',
         value: heroLines,
         inline: true,
       },
@@ -57,7 +74,7 @@ async function updateLeaderboard(client, guildId) {
         inline: false,
       }
     )
-    .setFooter({ text: 'Updated live • Hero School Academy' })
+    .setFooter({ text: 'Points = XP + QuickTime events • Updated live • Hero School Academy' })
     .setTimestamp();
 
   try {
