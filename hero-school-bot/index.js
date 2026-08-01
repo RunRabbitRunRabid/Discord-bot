@@ -14,6 +14,7 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
   ],
 });
 
@@ -55,3 +56,4 @@ process.on('uncaughtException', err => {
 });
 
 client.login(token);
+
