@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const db = require('../database/db');
 const { getTodayKey } = require('../utils/time');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
+const { getLuck, applyLuckToRoll } = require('../utils/luck');
 
 function randomXP(min = 5, max = 20) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -61,7 +62,10 @@ module.exports = {
     }
 
     const isWork = character.afterschool === 'work';
-    const earnedXP = randomXP();
+    let earnedXP = randomXP();
+    const luck = getLuck(character.id);
+    earnedXP = applyLuckToRoll(earnedXP, luck);
+
     const earnedMoney = isWork ? randomMoney(8, 20) : randomMoney(2, 8);
 
     db.prepare('UPDATE characters SET xp = xp + ?, money = money + ? WHERE id = ?').run(earnedXP, earnedMoney, character.id);
@@ -72,13 +76,14 @@ module.exports = {
     const flavorPool = isWork ? WORK_FLAVOR : CLUB_FLAVOR;
     const flavorText = `**${charName}** ${flavorPool[Math.floor(Math.random() * flavorPool.length)]}`;
     const activityLabel = isWork ? '🌸 Work' : '🌸 Club';
+    const luckNote = luck ? ` (${luck.modifier_type === 'good' ? '🍀 Good Luck' : '☘️ Bad Luck'})` : '';
 
     const embed = new EmbedBuilder()
       .setTitle(`After-School — ${activityLabel}`)
       .setColor(0xff9ec8)
       .setDescription(flavorText)
       .addFields(
-        { name: 'XP Earned', value: `+${earnedXP}`, inline: true },
+        { name: 'XP Earned', value: `+${earnedXP}${luckNote}`, inline: true },
         { name: 'Money Earned', value: `+$${earnedMoney.toFixed(2)}`, inline: true },
         { name: 'Total XP', value: `${character.xp + earnedXP}`, inline: true },
         { name: 'Total Money', value: `$${(character.money + earnedMoney).toFixed(2)}`, inline: true },
@@ -89,3 +94,4 @@ module.exports = {
     await updateAllLeaderboards(interaction.client).catch(() => {});
   },
 };
+

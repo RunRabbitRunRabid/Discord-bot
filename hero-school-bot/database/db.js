@@ -57,6 +57,15 @@ db.exec(`
     FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS luck_modifiers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id INTEGER NOT NULL UNIQUE,
+    modifier_type TEXT NOT NULL CHECK(modifier_type IN ('good', 'bad')),
+    applied_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+    expires_at INTEGER NOT NULL,
+    FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+  );
+
 `);
 
 // Drop and recreate quicktime tables with correct schema
@@ -111,6 +120,22 @@ if (!existingCols.includes('is_npc')) {
 if (!existingCols.includes('student_quality')) {
   db.exec("ALTER TABLE characters ADD COLUMN student_quality TEXT CHECK(student_quality IN ('good', 'medium', 'bad'))");
   console.log('[Database] Migrated: added student_quality column to characters');
+}
+
+// Ensure luck_modifiers table exists and has the right structure
+const luckTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='luck_modifiers'").get();
+if (!luckTableExists) {
+  db.exec(`
+    CREATE TABLE luck_modifiers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      character_id INTEGER NOT NULL UNIQUE,
+      modifier_type TEXT NOT NULL CHECK(modifier_type IN ('good', 'bad')),
+      applied_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+      expires_at INTEGER NOT NULL,
+      FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE
+    );
+  `);
+  console.log('[Database] Migrated: added luck_modifiers table');
 }
 
 module.exports = db;
