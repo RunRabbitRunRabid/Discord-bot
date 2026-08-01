@@ -56,14 +56,12 @@ module.exports = {
       'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
     ).run(guildId, character.id, 'class', todayKey);
 
-    const luckNote = luck ? ` (${luck.modifier_type === 'good' ? '🍀 Good Luck' : '☘️ Bad Luck'})` : '';
-
     const embed = new EmbedBuilder()
       .setTitle(`🌸 Class — ${todayClass}`)
       .setColor(0xff9ec8)
       .setDescription(`**${charName}** attended **${todayClass}** today!`)
       .addFields(
-        { name: 'Base XP', value: `+${baseXP}${luckNote}`, inline: true },
+        { name: 'Base XP', value: `+${baseXP}`, inline: true },
         { name: 'Proficiency Bonus', value: isProficient ? `+5 (${todayClass})` : 'None', inline: true },
         { name: 'Total XP Earned', value: `+${totalXP}`, inline: true },
         { name: 'Total XP', value: `${character.xp + totalXP}`, inline: true },

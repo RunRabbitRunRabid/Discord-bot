@@ -76,14 +76,13 @@ module.exports = {
     const flavorPool = isWork ? WORK_FLAVOR : CLUB_FLAVOR;
     const flavorText = `**${charName}** ${flavorPool[Math.floor(Math.random() * flavorPool.length)]}`;
     const activityLabel = isWork ? '🌸 Work' : '🌸 Club';
-    const luckNote = luck ? ` (${luck.modifier_type === 'good' ? '🍀 Good Luck' : '☘️ Bad Luck'})` : '';
 
     const embed = new EmbedBuilder()
       .setTitle(`After-School — ${activityLabel}`)
       .setColor(0xff9ec8)
       .setDescription(flavorText)
       .addFields(
-        { name: 'XP Earned', value: `+${earnedXP}${luckNote}`, inline: true },
+        { name: 'XP Earned', value: `+${earnedXP}`, inline: true },
         { name: 'Money Earned', value: `+$${earnedMoney.toFixed(2)}`, inline: true },
         { name: 'Total XP', value: `${character.xp + earnedXP}`, inline: true },
         { name: 'Total Money', value: `$${(character.money + earnedMoney).toFixed(2)}`, inline: true },
