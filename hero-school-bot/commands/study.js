@@ -50,12 +50,10 @@ module.exports = {
       'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
     ).run(guildId, character.id, 'study', todayKey);
 
-    const luckNote = luck ? ` (${luck.modifier_type === 'good' ? '🍀 Good Luck' : '☘️ Bad Luck'})` : '';
-
     const embed = new EmbedBuilder()
       .setTitle('🌸 Study Session')
       .setColor(0xff9ec8)
-      .setDescription(`**${charName}** hit the books and earned **+${earned} XP**!${luckNote}`)
+      .setDescription(`**${charName}** hit the books and earned **+${earned} XP**!`)
       .addFields({ name: 'Total XP', value: `${character.xp + earned}`, inline: true })
       .setFooter({ text: 'Hero School Academy' });
 
