@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const db = require('../database/db');
-const { getWeekKey } = require('../utils/time');
+const { getWeekKey, getTodayKey } = require('../utils/time');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
 
 const BONUS_XP = 10;
@@ -19,6 +19,7 @@ module.exports = {
       const client = interaction.client;
       const guildId = interaction.guildId;
       const weekKey = getWeekKey();
+      const todayKey = getTodayKey();
 
       // Get top 3 characters before reset
       const top = db.prepare(
@@ -27,6 +28,9 @@ module.exports = {
 
       // Reset XP to 0
       db.prepare('UPDATE characters SET xp = 0 WHERE guild_id = ?').run(guildId);
+
+      // Clear daily cooldowns so people can roll fresh
+      db.prepare('DELETE FROM cooldowns WHERE guild_id = ? AND used_on = ?').run(guildId, todayKey);
 
       // Award bonus and record reset (force replace if already exists this week)
       const insertReset = db.prepare(`
@@ -47,10 +51,11 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle('🌸 Weekly Reset Complete')
         .setColor(0x00ff00)
-        .setDescription('XP reset and bonus awarded.')
+        .setDescription('XP reset, bonus awarded, and daily cooldowns cleared.')
         .addFields(
           { name: 'Top 3 Bonus Recipients', value: topNames, inline: false },
-          { name: 'Bonus Amount', value: `+${BONUS_XP} XP each`, inline: true }
+          { name: 'Bonus Amount', value: `+${BONUS_XP} XP each`, inline: true },
+          { name: 'Cooldowns', value: 'Cleared — everyone can roll again', inline: true }
         );
 
       return interaction.editReply({ embeds: [embed] });
