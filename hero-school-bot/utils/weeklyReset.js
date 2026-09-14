@@ -1,5 +1,5 @@
 const db = require('../database/db');
-const { getWeekKey } = require('./time');
+const { getWeekKey, getTodayKey } = require('./time');
 
 const BONUS_XP = 10;
 const BONUS_SLOTS = 3;
@@ -10,11 +10,13 @@ const BONUS_SLOTS = 3;
  *  2. Resets all character XP to 0.
  *  3. Awards BONUS_XP to the top characters as a head-start.
  *  4. Writes a row to weekly_resets for each bonus recipient.
+ *  5. Clears daily cooldowns so everyone can roll again without being blocked.
  *
  * Money is intentionally untouched.
  */
 async function performWeeklyReset(client) {
   const weekKey = getWeekKey();
+  const todayKey = getTodayKey();
 
   for (const guild of client.guilds.cache.values()) {
     const guildId = guild.id;
@@ -26,6 +28,10 @@ async function performWeeklyReset(client) {
 
     // Reset every character's XP to 0
     db.prepare('UPDATE characters SET xp = 0 WHERE guild_id = ?').run(guildId);
+
+    // Clear daily cooldowns so people can roll all activities fresh
+    // This prevents them from being blocked on the reset day
+    db.prepare('DELETE FROM cooldowns WHERE guild_id = ? AND used_on = ?').run(guildId, todayKey);
 
     // Award bonus XP and record the reset for each top character
     const insertReset = db.prepare(`
@@ -40,9 +46,11 @@ async function performWeeklyReset(client) {
 
     console.log(
       `[Weekly Reset] Guild ${guildId} (${guild.name}): XP reset complete. ` +
-      `Top ${top.length} character(s) received ${BONUS_XP} XP head start — week ${weekKey}.`
+      `Top ${top.length} character(s) received ${BONUS_XP} XP head start — week ${weekKey}. ` +
+      `Daily cooldowns cleared.`
     );
   }
 }
 
 module.exports = { performWeeklyReset };
+
