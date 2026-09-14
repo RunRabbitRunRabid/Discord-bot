@@ -22,7 +22,7 @@ function randomMoney(min, max) {
 const CLUB_FLAVOR = [
   'spent the afternoon with their club — laughing, bonding, and growing stronger together.',
   "attended the club meeting and wouldn't have missed it for the world. Great vibes all around.",
-  'helped organize today\'s club event. The team spirit was absolutely contagious!',
+  'helped organize today\\'s club event. The team spirit was absolutely contagious!',
   'had a productive club afternoon full of snacks, strategy, and good company.',
   'made some new friends at club today. Social skills: leveling up. 🌸',
 ];
@@ -404,7 +404,13 @@ const cornCommands = {
       }
     }
 
-    await updateAllLeaderboards(message.client).catch(() => {});
+    // Update leaderboards — this MUST happen, not silently fail
+    try {
+      await updateAllLeaderboards(message.client);
+    } catch (err) {
+      console.error('[Autoroll] Failed to update leaderboards:', err);
+    }
+
     return message.reply({
       content: `✅ Done!`,
       flags: ['SuppressNotifications'],
@@ -437,7 +443,7 @@ const cornCommands = {
         },
         {
           name: 'Luckstatus <character name>',
-          value: 'Displays the character\'s current luck modifier and remaining duration.',
+          value: 'Displays the character\\'s current luck modifier and remaining duration.',
           inline: false,
         },
         {
