@@ -3,12 +3,32 @@ const { updateAllLeaderboards } = require('../utils/leaderboard');
 const { performWeeklyReset } = require('../utils/weeklyReset');
 const { performNPCDailyRolls } = require('../utils/npcRolls');
 const { scheduleAllGuilds } = require('../utils/quicktimeManager');
+const db = require('../database/db');
+const { getWeekKey } = require('../utils/time');
 
 module.exports = {
   name: 'ready',
   once: true,
   async execute(client) {
     console.log(`[Ready] Logged in as ${client.user.tag}`);
+
+    // Check if weekly reset was missed (e.g., bot crashed/restarted mid-week or Monday cron failed)
+    const currentWeekKey = getWeekKey();
+    const guilds = client.guilds.cache.values();
+    
+    for (const guild of guilds) {
+      const guildId = guild.id;
+      // Check if ANY reset record exists for the current week
+      const weeklyResetExists = db.prepare(
+        'SELECT 1 FROM weekly_resets WHERE guild_id = ? AND reset_week = ? LIMIT 1'
+      ).get(guildId, currentWeekKey);
+      
+      if (!weeklyResetExists) {
+        // No reset this week — run it now
+        console.log(`[Ready] Missed weekly reset for ${guild.name} — running now`);
+        await performWeeklyReset(client).catch(console.error);
+      }
+    }
 
     // Midnight Eastern Time — reset cooldowns, update leaderboards, and schedule
     // the next day's QuickTime events for all configured guilds.
@@ -51,3 +71,4 @@ module.exports = {
     console.log('[Ready] Hero School bot is online and ready!');
   },
 };
+
