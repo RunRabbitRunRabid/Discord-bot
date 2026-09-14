@@ -4,8 +4,7 @@ const { applyLuck, clearLuck, getLuck, applyLuckToRoll } = require('../utils/luc
 const { getTodayClass, getTodayKey } = require('../utils/time');
 const { updateAllLeaderboards } = require('../utils/leaderboard');
 
-// CORN! is a hidden admin-only system. These commands are only for the bot creator
-// and people reading the source code. They are completely hidden from normal users.
+// Hidden admin-only system. These commands are completely hidden from normal users.
 
 const CORN_PREFIX = 'CORN!';
 
@@ -20,8 +19,24 @@ function randomMoney(min, max) {
   return parseFloat((Math.random() * (max - min) + min).toFixed(2));
 }
 
+const CLUB_FLAVOR = [
+  'spent the afternoon with their club — laughing, bonding, and growing stronger together.',
+  "attended the club meeting and wouldn't have missed it for the world. Great vibes all around.",
+  'helped organize today\'s club event. The team spirit was absolutely contagious!',
+  'had a productive club afternoon full of snacks, strategy, and good company.',
+  'made some new friends at club today. Social skills: leveling up. 🌸',
+];
+
+const WORK_FLAVOR = [
+  'clocked out after a solid shift. Another day, another paycheck.',
+  'finished their shift and pocketed some well-earned cash. Hard work pays off.',
+  'handled every task without complaint. The manager definitely noticed.',
+  'powered through a busy shift. The wallet is looking a lot healthier now.',
+  'picked up an extra task at work today. The extra effort shows on the balance sheet.',
+];
+
 /**
- * CORN! commands are hidden message-based commands for admins only.
+ * Hidden commands for admins only.
  * They should never be discoverable through normal Discord interfaces.
  */
 const cornCommands = {
@@ -57,11 +72,10 @@ const cornCommands = {
     const expiresIn = Math.ceil((luck.expires_at - Math.floor(Date.now() / 1000)) / 3600);
 
     const embed = new EmbedBuilder()
-      .setTitle('🍀 CORN! Good Luck Applied')
+      .setTitle('🍀 Good Luck Applied')
       .setColor(0x00ff00)
       .setDescription(`**${charName}** now has Good Luck (12–20 rolls).`)
-      .addFields({ name: 'Expires In', value: `${expiresIn} hour(s)` })
-      .setFooter({ text: 'Hidden CORN! system' });
+      .addFields({ name: 'Expires In', value: `${expiresIn} hour(s)` });
 
     return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
   },
@@ -98,11 +112,10 @@ const cornCommands = {
     const expiresIn = Math.ceil((luck.expires_at - Math.floor(Date.now() / 1000)) / 3600);
 
     const embed = new EmbedBuilder()
-      .setTitle('☘️ CORN! Bad Luck Applied')
+      .setTitle('☘️ Bad Luck Applied')
       .setColor(0xff0000)
       .setDescription(`**${charName}** now has Bad Luck (1–9 rolls).`)
-      .addFields({ name: 'Expires In', value: `${expiresIn} hour(s)` })
-      .setFooter({ text: 'Hidden CORN! system' });
+      .addFields({ name: 'Expires In', value: `${expiresIn} hour(s)` });
 
     return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
   },
@@ -136,10 +149,9 @@ const cornCommands = {
     const hadLuck = clearLuck(character.id);
 
     const embed = new EmbedBuilder()
-      .setTitle('✨ CORN! Luck Cleared')
+      .setTitle('✨ Luck Cleared')
       .setColor(0xffff00)
-      .setDescription(hadLuck ? `**${charName}**'s luck modifier has been removed.` : `**${charName}** had no active luck modifier.`)
-      .setFooter({ text: 'Hidden CORN! system' });
+      .setDescription(hadLuck ? `**${charName}**'s luck modifier has been removed.` : `**${charName}** had no active luck modifier.`);
 
     return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
   },
@@ -174,10 +186,9 @@ const cornCommands = {
 
     if (!luck) {
       const embed = new EmbedBuilder()
-        .setTitle('📊 CORN! Luck Status')
+        .setTitle('📊 Luck Status')
         .setColor(0x808080)
-        .setDescription(`**${charName}** has no active luck modifier.`)
-        .setFooter({ text: 'Hidden CORN! system' });
+        .setDescription(`**${charName}** has no active luck modifier.`);
 
       return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
     }
@@ -188,24 +199,24 @@ const cornCommands = {
     const modifierLabel = luck.modifier_type === 'good' ? '🍀 Good Luck (12–20 rolls)' : '☘️ Bad Luck (1–9 rolls)';
 
     const embed = new EmbedBuilder()
-      .setTitle('📊 CORN! Luck Status')
+      .setTitle('📊 Luck Status')
       .setColor(luck.modifier_type === 'good' ? 0x00ff00 : 0xff0000)
       .setDescription(`**${charName}** has an active modifier.`)
-      .addFields({ name: 'Modifier', value: modifierLabel, inline: true }, { name: 'Expires In', value: `${hoursLeft} hour(s)`, inline: true })
-      .setFooter({ text: 'Hidden CORN! system' });
+      .addFields({ name: 'Modifier', value: modifierLabel, inline: true }, { name: 'Expires In', value: `${hoursLeft} hour(s)`, inline: true });
 
     return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
   },
 
   /**
-   * CORN!autoroll [name], [name], [name] #channel
-   * Automatically rolls class, afterschool, train, and study for multiple characters in a specified channel.
-   * Usage: CORN!autoroll Alice, Bob, Charlie #general
+   * Autoroll [name], [name], [name] #channel
+   * Automatically rolls class, afterschool, train, and study for multiple characters.
+   * Sends results to channel looking like normal command rolls.
+   * Usage: Autoroll Alice, Bob, Charlie #general
    */
   autoroll: async (message, args) => {
     if (!args.length) {
       return message.reply({
-        content: '❌ Usage: `CORN!autoroll [name], [name], [name] #channel`',
+        content: '❌ Usage: `Autoroll [name], [name], [name] #channel`',
         flags: ['SuppressNotifications'],
       });
     }
@@ -220,7 +231,7 @@ const cornCommands = {
 
     if (!channelMention) {
       return message.reply({
-        content: '❌ You must specify a channel: `CORN!autoroll [names] #channel`',
+        content: '❌ You must specify a channel: `Autoroll [names] #channel`',
         flags: ['SuppressNotifications'],
       });
     }
@@ -257,7 +268,6 @@ const cornCommands = {
       ).get(guildId, charName);
 
       if (!character) {
-        // Skip invalid character, but don't fail the whole command
         continue;
       }
       validChars.push(character);
@@ -270,12 +280,9 @@ const cornCommands = {
       });
     }
 
-    // Roll for each character and collect results
-    const results = [];
-
+    // Roll for each character and send embeds as if commands were run
     for (const character of validChars) {
       const charName = character.name;
-      const rolls = {};
 
       // CLASS
       const classUsed = db.prepare(
@@ -295,9 +302,19 @@ const cornCommands = {
           'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
         ).run(guildId, character.id, 'class', todayKey);
 
-        rolls.class = `+${totalXP} XP`;
-      } else {
-        rolls.class = 'Already done';
+        const embed = new EmbedBuilder()
+          .setTitle(`🌸 Class — ${todayClass}`)
+          .setColor(0xff9ec8)
+          .setDescription(`**${charName}** attended **${todayClass}** today!`)
+          .addFields(
+            { name: 'Base XP', value: `+${classXP}`, inline: true },
+            { name: 'Proficiency Bonus', value: isProficient ? `+5 (${todayClass})` : 'None', inline: true },
+            { name: 'Total XP Earned', value: `+${totalXP}`, inline: true },
+            { name: 'Total XP', value: `${character.xp + totalXP}`, inline: true }
+          )
+          .setFooter({ text: 'Hero School Academy' });
+
+        await targetChannel.send({ embeds: [embed] });
       }
 
       // STUDY
@@ -315,9 +332,14 @@ const cornCommands = {
           'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
         ).run(guildId, character.id, 'study', todayKey);
 
-        rolls.study = `+${studyXP} XP`;
-      } else {
-        rolls.study = 'Already done';
+        const embed = new EmbedBuilder()
+          .setTitle('🌸 Study Session')
+          .setColor(0xff9ec8)
+          .setDescription(`**${charName}** hit the books and earned **+${studyXP} XP**!`)
+          .addFields({ name: 'Total XP', value: `${character.xp + studyXP}`, inline: true })
+          .setFooter({ text: 'Hero School Academy' });
+
+        await targetChannel.send({ embeds: [embed] });
       }
 
       // TRAIN
@@ -335,9 +357,14 @@ const cornCommands = {
           'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
         ).run(guildId, character.id, 'train', todayKey);
 
-        rolls.train = `+${trainXP} XP`;
-      } else {
-        rolls.train = 'Already done';
+        const embed = new EmbedBuilder()
+          .setTitle('🌸 Training Session')
+          .setColor(0xff9ec8)
+          .setDescription(`**${charName}** pushed through a tough training session and earned **+${trainXP} XP**!`)
+          .addFields({ name: 'Total XP', value: `${character.xp + trainXP}`, inline: true })
+          .setFooter({ text: 'Hero School Academy' });
+
+        await targetChannel.send({ embeds: [embed] });
       }
 
       // AFTERSCHOOL
@@ -357,88 +384,73 @@ const cornCommands = {
           'INSERT INTO cooldowns (guild_id, character_id, command, used_on) VALUES (?, ?, ?, ?)'
         ).run(guildId, character.id, 'afterschool', todayKey);
 
-        rolls.afterschool = `+${afterschoolXP} XP, +$${earnedMoney.toFixed(2)}`;
-      } else {
-        rolls.afterschool = 'Already done';
+        const flavorPool = isWork ? WORK_FLAVOR : CLUB_FLAVOR;
+        const flavorText = `**${charName}** ${flavorPool[Math.floor(Math.random() * flavorPool.length)]}`;
+        const activityLabel = isWork ? '🌸 Work' : '🌸 Club';
+
+        const embed = new EmbedBuilder()
+          .setTitle(`After-School — ${activityLabel}`)
+          .setColor(0xff9ec8)
+          .setDescription(flavorText)
+          .addFields(
+            { name: 'XP Earned', value: `+${afterschoolXP}`, inline: true },
+            { name: 'Money Earned', value: `+$${earnedMoney.toFixed(2)}`, inline: true },
+            { name: 'Total XP', value: `${character.xp + afterschoolXP}`, inline: true },
+            { name: 'Total Money', value: `$${(character.money + earnedMoney).toFixed(2)}`, inline: true }
+          )
+          .setFooter({ text: 'Hero School Academy' });
+
+        await targetChannel.send({ embeds: [embed] });
       }
-
-      results.push({ name: charName, rolls });
     }
 
-    // Send results to target channel
-    const embed = new EmbedBuilder()
-      .setTitle('🌽 CORN! Autoroll Complete')
-      .setColor(0xffa500)
-      .setDescription(`Autorolled ${validChars.length} character(s)`);
-
-    for (const result of results) {
-      embed.addFields({
-        name: `**${result.name}**`,
-        value: `Class: ${result.rolls.class}\nStudy: ${result.rolls.study}\nTrain: ${result.rolls.train}\nAfter-School: ${result.rolls.afterschool}`,
-        inline: false,
-      });
-    }
-
-    embed.setFooter({ text: 'Hidden CORN! system' });
-
-    try {
-      await targetChannel.send({ embeds: [embed] });
-      await updateAllLeaderboards(message.client).catch(() => {});
-      return message.reply({
-        content: `✅ Autoroll complete! Results posted to ${targetChannel}`,
-        flags: ['SuppressNotifications'],
-      });
-    } catch (err) {
-      console.error('[CORN! Autoroll Error]', err);
-      return message.reply({
-        content: '❌ Failed to post results to channel.',
-        flags: ['SuppressNotifications'],
-      });
-    }
+    await updateAllLeaderboards(message.client).catch(() => {});
+    return message.reply({
+      content: `✅ Done!`,
+      flags: ['SuppressNotifications'],
+    });
   },
 
   /**
-   * CORN!help
-   * Displays every hidden CORN! command. This command is also hidden and admin-only.
+   * Help command
    */
   help: async (message) => {
     const embed = new EmbedBuilder()
-      .setTitle('🌽 CORN! Hidden Commands')
+      .setTitle('📜 Hidden Commands')
       .setColor(0xffa500)
       .setDescription('Admin-only hidden commands for internal use only.')
       .addFields(
         {
-          name: 'CORN!luck <character name>',
+          name: 'Luck <character name>',
           value: 'Grants Good Luck (12–20 rolls) for 1 in-game day.',
           inline: false,
         },
         {
-          name: 'CORN!badluck <character name>',
+          name: 'Badluck <character name>',
           value: 'Grants Bad Luck (1–9 rolls) for 1 in-game day.',
           inline: false,
         },
         {
-          name: 'CORN!clearluck <character name>',
+          name: 'Clearluck <character name>',
           value: 'Immediately removes any active luck modifier.',
           inline: false,
         },
         {
-          name: 'CORN!luckstatus <character name>',
+          name: 'Luckstatus <character name>',
           value: 'Displays the character\'s current luck modifier and remaining duration.',
           inline: false,
         },
         {
-          name: 'CORN!autoroll [name], [name], [name] #channel',
-          value: 'Automatically rolls class, study, train, and afterschool for multiple characters and posts results to a channel.',
+          name: 'Autoroll [name], [name], [name] #channel',
+          value: 'Automatically rolls class, study, train, and afterschool for multiple characters.',
           inline: false,
         },
         {
-          name: 'CORN!help',
+          name: 'Help',
           value: 'Displays this hidden command list.',
           inline: false,
         }
-      )
-      .setFooter({ text: 'These commands are hidden and should never be discovered by normal users.' });
+      );
 
     return message.reply({ embeds: [embed], flags: ['SuppressNotifications'] });
   },
@@ -447,7 +459,7 @@ const cornCommands = {
 module.exports = {
   name: 'messageCreate',
   async execute(message) {
-    // Ignore bot messages and messages without the CORN prefix
+    // Ignore bot messages and messages without the prefix
     if (message.author.bot || !message.content.startsWith(CORN_PREFIX)) return;
 
     // Restrict to bot creator only (if CREATOR_ID is set) or server admins
@@ -474,7 +486,7 @@ module.exports = {
     try {
       await command(message, args);
     } catch (err) {
-      console.error(`[CORN! Error] ${commandName}:`, err);
+      console.error(`[Error] ${commandName}:`, err);
       message
         .reply({
           content: '❌ An error occurred.',
